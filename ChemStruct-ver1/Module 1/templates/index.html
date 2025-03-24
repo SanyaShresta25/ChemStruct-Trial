@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemical Structure Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Chemical Structure Generator</h1>
+    
+    <form id="chemical-form">
+        <label for="chemical_name">Enter Chemical Name:</label>
+        <input type="text" id="chemical_name" name="chemical_name" required>
+        <button type="submit">Generate</button>
+    </form>
+
+    <h2>2D Structure:</h2>
+    <img id="structure-img" src="" alt="Chemical Structure will appear here" style="display:none;">
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("chemical-form").addEventListener("submit", function (event) {
+            event.preventDefault();  // Prevent form from reloading the page
+            
+            let chemicalName = document.getElementById("chemical_name").value.trim();
+            let structureImg = document.getElementById("structure-img");
+
+            if (!chemicalName) {
+                alert("Please enter a chemical name.");
+                return;
+            }
+
+            fetch("/get_structure", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `chemical_name=${encodeURIComponent(chemicalName)}`,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.image_url) {
+                    structureImg.src = data.image_url;
+                    structureImg.style.display = "block"; // Show the image
+                } else {
+                    alert(data.error || "Chemical structure not found.");
+                    structureImg.style.display = "none";
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    });
+</script>
+
+</body>
+</html>
