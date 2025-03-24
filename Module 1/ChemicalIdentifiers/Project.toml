@@ -1,0 +1,24 @@
+name = "ChemicalIdentifiers"
+uuid = "fa4ea961-1416-484e-bda2-883ee1634ba5"
+authors = ["Andrés Riedemann <longemen3000@gmail.com> and contributors"]
+version = "0.1.10"
+
+[deps]
+Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+Preferences = "21216c6a-2e73-6563-6e65-726566657250"
+Scratch = "6c6a2e73-6563-6170-7368-637461726353"
+UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+Unicode = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+
+[compat]
+Arrow = "^1.5, 2"
+Preferences = "^1.2"
+Scratch = "^1.1"
+julia = "^1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
