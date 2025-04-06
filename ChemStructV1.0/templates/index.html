@@ -1,1 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chemical Structure Viewer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f2e7;
+      margin: 0;
+      padding: 0;
+      color: #2e4d43;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    nav {
+      background-color: #a3b18a;
+      color: #fefae0;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    footer {
+      background-color: #588157;
+      color: #fefae0;
+      text-align: center;
+      padding: 15px;
+      margin-top: 40px;
+    }
+
+    main {
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+  color: #344e41;
+  text-align: center;
+  margin-bottom: 20px;
+  margin-left:170px;
+}
+
+
+    input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 14px;
+      background-color: #a3b18a;
+      color: #fefae0;
+      border: none;
+      cursor: pointer;
+      margin: 5px;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #6c8a5b;
+    }
+
+    .viewer-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    #viewer, #structure-image {
+      width: 300px;
+      height: 300px;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #viewer.show, #structure-image.show {
+      display: block;
+      opacity: 1;
+    }
+
+    #structure-image {
+      object-fit: contain;
+    }
+
+    .info-box {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .info-box p {
+      margin: 5px;
+    }
+
+    #error-msg {
+      color: red;
+      margin-top: 10px;
+    }
+
+    #loading-msg {
+      color: gray;
+      margin-top: 10px;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #3a5a40;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Dark mode styles */
+    body.dark {
+      background-color: #1e1e1e;
+      color: #f5f5f5;
+    }
+
+    body.dark nav,
+    body.dark footer {
+      background-color: #2d3e2f;
+      color: #f5f5f5;
+    }
+
+    body.dark button {
+      background-color: #3a5a40;
+      color: #f5f5f5;
+    }
+
+    body.dark button:hover {
+      background-color: #52796f;
+    }
+
+    body.dark input[type="text"] {
+      background-color: #2a2a2a;
+      color: #fff;
+      border: 1px solid #555;
+    }
+
+    body.dark #viewer {
+      background-color: #1e1e1e;
+    }
+
+    @media (max-width: 600px) {
+      .viewer-container {
+        flex-direction: column;
+      }
+
+      input[type="text"] {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>ChemStruct</nav>
+
+  <main>
+    <button onclick="toggleDarkMode()" style="float: right; margin-bottom: 10px;">🌓 Toggle Dark Mode</button>
+    <h1>Chemical Structure Viewer</h1>
+    <input type="text" id="compound-name" placeholder="e.g. ethanol" />
+    <br/>
+    <button onclick="fetch2D()">View 2D Structure</button>
+    <button onclick="fetch3D()">View 3D Structure</button>
+    <button onclick="clearViewer()">Clear</button>
+
+    <div id="loading-msg"></div>
+    <div id="error-msg"></div>
+
+    <div class="viewer-container">
+      <img id="structure-image" alt="2D Structure" />
+      <div id="viewer"></div>
+    </div>
+
+    <div class="info-box" id="compound-info"></div>
+
+    <div>
+      <a id="download-link" download="structure.png" style="display: none;">⬇️ Download 2D Image</a>
+      <br />
+      <button onclick="export3DImage()">🖼️ Export 3D Image</button>
+      <a id="3d-download-link" download="3dstructure.png" style="display: none;">Download 3D Image</a>
+    </div>
+  </main>
+
+  <footer>
+    Made with 🤍 by Saanvi, Sanya, Shachi and Shravya
+  </footer>
+
+  <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+  <script>
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+    }
+
+    function getCompoundName() {
+      const name = document.getElementById("compound-name").value.trim();
+      if (!name) {
+        showError("Please enter a compound name.");
+        return null;
+      }
+      return name;
+    }
+
+    function showError(msg) {
+      document.getElementById("error-msg").textContent = msg;
+    }
+
+    function showLoading(msg) {
+      document.getElementById("loading-msg").textContent = msg;
+    }
+
+    function clearMessages() {
+      document.getElementById("error-msg").textContent = "";
+      document.getElementById("loading-msg").textContent = "";
+    }
+
+    function clearViewer() {
+      document.getElementById("compound-name").value = "";
+      document.getElementById("structure-image").classList.remove("show");
+      document.getElementById("structure-image").style.display = "none";
+      document.getElementById("viewer").innerHTML = "";
+      document.getElementById("viewer").classList.remove("show");
+      document.getElementById("compound-info").innerHTML = "";
+      document.getElementById("download-link").style.display = "none";
+      document.getElementById("3d-download-link").style.display = "none";
+      clearMessages();
+    }
+
+    async function fetchCompoundDetails() {
+      const compound = getCompoundName();
+      if (!compound) return null;
+
+      clearMessages();
+      showLoading("Fetching compound details...");
+
+      try {
+        const response = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${compound}/record/JSON`);
+        if (!response.ok) {
+          showError("Compound not found.");
+          return null;
+        }
+
+        const data = await response.json();
+        const compoundData = data?.PC_Compounds?.[0];
+        const cid = compoundData?.id?.id?.cid;
+        const props = compoundData?.props;
+
+        const molWeight = props?.find(p => p.urn.label === "Molecular Weight")?.value?.fval;
+        const formula = props?.find(p => p.urn.label === "Molecular Formula")?.value?.sval;
+        const iupac = props?.find(p => p.urn.label === "IUPAC Name")?.value?.sval;
+
+        showLoading("");
+
+        return {
+          cid,
+          image_url: `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/PNG`,
+          formula,
+          molWeight,
+          iupac
+        };
+      } catch (e) {
+        showError("Failed to fetch compound data.");
+        return null;
+      }
+    }
+
+    async function fetch2D() {
+      const data = await fetchCompoundDetails();
+      if (!data || !data.image_url) return;
+
+      const image = document.getElementById("structure-image");
+      image.src = data.image_url;
+      image.style.display = "block";
+      image.classList.add("show");
+
+      const downloadLink = document.getElementById("download-link");
+      downloadLink.href = data.image_url;
+      downloadLink.style.display = "inline";
+
+      const info = document.getElementById("compound-info");
+      info.innerHTML = `
+        <p><strong>Molecular Formula:</strong> ${data.formula || "N/A"}</p>
+        <p><strong>Molecular Weight:</strong> ${data.molWeight || "N/A"} g/mol</p>
+        <p><strong>IUPAC Name:</strong> ${data.iupac || "N/A"}</p>
+      `;
+    }
+
+    async function fetch3D() {
+      const compound = getCompoundName();
+      if (!compound) return;
+
+      clearMessages();
+      showLoading("Fetching 3D structure...");
+
+      try {
+        const response = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${compound}/SDF`);
+        if (!response.ok) {
+          showError("3D structure not available.");
+          return;
+        }
+
+        const sdf = await response.text();
+
+        const viewer = $3Dmol.createViewer("viewer", {
+          backgroundColor: document.body.classList.contains("dark") ? "#1e1e1e" : "#f5f2e7"
+        });
+
+        viewer.addModel(sdf, "sdf");
+        viewer.setStyle({}, { stick: {}, sphere: { scale: 0.3 } });
+        viewer.zoomTo();
+        viewer.render();
+
+        const viewerDiv = document.getElementById("viewer");
+        viewerDiv.classList.add("show");
+
+        showLoading("");
+      } catch (e) {
+        showError("Failed to load 3D structure.");
+      }
+    }
+
+    function export3DImage() {
+      const viewerDiv = document.getElementById("viewer");
+      const canvas = viewerDiv.querySelector("canvas");
+      if (!canvas) {
+        showError("3D structure not rendered yet.");
+        return;
+      }
+
+      const imgURL = canvas.toDataURL("image/png");
+      const downloadLink = document.getElementById("3d-download-link");
+      downloadLink.href = imgURL;
+      downloadLink.style.display = "inline";
+      // Removed auto-click to prevent duplicate download
+    }
+  </script>
+</body>
+</html>
 
