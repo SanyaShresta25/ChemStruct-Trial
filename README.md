@@ -32,20 +32,14 @@ Built with ❤️ by **Saanvi, Sanya, Shachi, and Shravya**
 
 ---
 
-## 🖼️ Preview
-
-<img src="preview.png" alt="ChemStructV1.0 Screenshot" width="700"/>
-
----
-
 ## 🛠️ How to Use
 
-1. **Clone this repo** or [download the HTML file](#).
+1. **Clone this repo** 
 2. Open `index.html` in your web browser.
 3. Type a compound name (e.g. *caffeine*).
 4. Click:
-   - 🔹 "View 2D Structure" to fetch 2D image.
-   - 🔹 "View 3D Structure" to fetch interactive model.
+   🔹 "View 2D Structure" to fetch 2D image.
+   🔹 "View 3D Structure" to fetch interactive model.
 5. Click "Download" to save the structure images.
 
 ---
